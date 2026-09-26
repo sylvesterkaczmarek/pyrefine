@@ -2,7 +2,6 @@
 import json
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
 import tempfile
@@ -15,6 +14,7 @@ PYTHON = sys.executable
 ENV = os.environ.copy()
 ENV.pop("PYTHONPATH", None)
 ENV["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+ENV["PYTHONDONTWRITEBYTECODE"] = "1"
 
 
 def run(name, arguments, cwd=SOURCE, expected_code=0, expected_text=None):
@@ -28,6 +28,16 @@ def run(name, arguments, cwd=SOURCE, expected_code=0, expected_text=None):
     return output
 
 
+def replace_source(relative_path, content):
+    """Prevent same-size, same-second edits from reusing stale Python bytecode."""
+    target = SOURCE / relative_path
+    target.write_bytes(content)
+    cache = target.parent / "__pycache__"
+    for compiled in cache.glob(target.stem + ".*.pyc"):
+        compiled.unlink()
+    assert target.read_bytes() == content
+
+
 assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=SOURCE, text=True).strip() == CONFIG["sha"]
 full = [PYTHON] + CONFIG["suite"]
 run("submitted-suite", full, expected_text=CONFIG["suite_summary"])
@@ -36,14 +46,15 @@ run("new-test-lint", [PYTHON, "-m", "flake8", CONFIG["test_path"], "--max-line-l
 fixed = {path: (SOURCE / path).read_bytes() for path in CONFIG["source_paths"]}
 try:
     for path in fixed:
-        (SOURCE / path).write_bytes(subprocess.check_output(
+        replace_source(path, subprocess.check_output(
             ["git", "show", CONFIG["base"] + ":" + path], cwd=SOURCE))
     output = run("original-regressions", [PYTHON] + CONFIG["regressions"],
                  expected_code=1, expected_text=CONFIG["regression_summary"])
     assert "ImportError while importing test module" not in output
 finally:
     for path, content in fixed.items():
-        (SOURCE / path).write_bytes(content)
+        replace_source(path, content)
+run("verify-restored-source", ["git", "diff", "--exit-code"])
 run("restored-suite", full, expected_text=CONFIG["suite_summary"])
 run("patch-check", ["git", "diff", "--check", CONFIG["base"] + "...HEAD"])
 run("source-restoration", ["git", "diff", "--exit-code"])

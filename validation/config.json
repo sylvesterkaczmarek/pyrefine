@@ -1,0 +1,37 @@
+{
+  "base": "4374b02860cfb5228e3799c429a59053e746caf5",
+  "branch": "fix/sfe-fourth-axis-20260926",
+  "paths": [
+    "pyrefine/simulation/sfe_cfg.py",
+    "tests/unit_tests/simulation/test_sfe_cfg_4d.py"
+  ],
+  "message": "Use the fourth-axis extent when writing four-dimensional SFE arrays",
+  "sha": "f93a67d43c0c86536615c323d1c32a535c79a42e",
+  "source_paths": [
+    "pyrefine/simulation/sfe_cfg.py"
+  ],
+  "test_path": "tests/unit_tests/simulation/test_sfe_cfg_4d.py",
+  "suite": [
+    "-m",
+    "pytest",
+    "tests/unit_tests",
+    "-q"
+  ],
+  "suite_summary": "217 passed",
+  "regressions": [
+    "-m",
+    "pytest",
+    "tests/unit_tests/simulation/test_sfe_cfg_4d.py",
+    "-q",
+    "--tb=short"
+  ],
+  "regression_summary": "26 failed, 3 passed",
+  "lint_paths": [
+    "pyrefine/simulation/sfe_cfg.py",
+    "tests/unit_tests/simulation/test_sfe_cfg_4d.py"
+  ],
+  "build_args": [],
+  "installed_test_code": "import pathlib, sys, pyrefine, pytest; assert \"site-packages\" in pathlib.Path(pyrefine.__file__).parts; sys.exit(pytest.main([TEST_PATH, \"-q\"]))",
+  "installed_summary": "29 passed",
+  "final_summary": "217 unit tests and 29 installed-wheel cases passed; 26 original failures detected; submitted source restored."
+}
